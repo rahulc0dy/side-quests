@@ -1,0 +1,26 @@
+# Rust/Cargo related
+/target/
+**/*.rs.bk
+
+# Generated Cargo.lock (if your project is a library, you might want to ignore it)
+Cargo.lock
+
+# VS Code settings folder
+.vscode/
+
+# IntelliJ Rust / RustRover IDE files
+/.idea/
+/*.iml
+
+# Windows thumbnail cache files
+Thumbs.db
+
+# macOS files
+.DS_Store
+
+# Logs and temporary files
+*.log
+*.tmp
+
+# Backup files
+*~
