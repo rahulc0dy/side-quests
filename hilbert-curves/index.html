@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Quantico:ital,wght@0,400;0,700;1,400;1,700&display=swap"
+      rel="stylesheet"
+    />
+
+    <title>Hilbert Curves</title>
+
+    <style>
+      body {
+        display: grid;
+        place-content: center;
+        background: #2b0003;
+        background-image: linear-gradient(
+          142deg,
+          rgba(23, 13, 13, 1) 0%,
+          rgba(0, 28, 24, 1) 100%
+        );
+        background-size: cover;
+        min-height: 100vh;
+        margin: 0;
+        font-family: "Quantico", monospace;
+        font-weight: 700;
+        color: white;
+      }
+
+      h1 {
+        font-size: 3rem;
+        margin: 0;
+        text-align: center;
+        background: #ff8282;
+        background-image: linear-gradient(
+          142deg,
+          rgba(255, 130, 130, 1) 0%,
+          rgba(255, 255, 255, 1) 49%,
+          rgba(145, 255, 237, 1) 100%
+        );
+        color: transparent;
+        background-clip: text;
+      }
+
+      input {
+        width: 100%;
+        margin-block: 1rem;
+        accent-color: pink;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>HILBERT CURVE</h1>
+    <input type="range" id="order" min="1" max="8" value="1" />
+    <canvas id="hilbert"></canvas>
+    <script>
+      function hilbertCurve(order, size) {
+        let points = [];
+        function hilbert(x, y, xi, xj, yi, yj, n) {
+          if (n <= 0) {
+            let px = x + (xi + yi) / 2;
+            let py = y + (xj + yj) / 2;
+            points.push([px, py]);
+          } else {
+            hilbert(x, y, yi / 2, yj / 2, xi / 2, xj / 2, n - 1);
+            hilbert(
+              x + xi / 2,
+              y + xj / 2,
+              xi / 2,
+              xj / 2,
+              yi / 2,
+              yj / 2,
+              n - 1
+            );
+            hilbert(
+              x + xi / 2 + yi / 2,
+              y + xj / 2 + yj / 2,
+              xi / 2,
+              xj / 2,
+              yi / 2,
+              yj / 2,
+              n - 1
+            );
+            hilbert(
+              x + xi / 2 + yi,
+              y + xj / 2 + yj,
+              -yi / 2,
+              -yj / 2,
+              -xi / 2,
+              -xj / 2,
+              n - 1
+            );
+          }
+        }
+        hilbert(0, 0, size, 0, 0, size, order);
+        return points;
+      }
+
+      function resizeCanvas(canvas, size) {
+        canvas.width = size;
+        canvas.height = size;
+      }
+
+      function drawBox(ctx, margin, size) {
+        ctx.save();
+        ctx.strokeStyle = "#222";
+        ctx.lineWidth = 1;
+        ctx.strokeRect(margin, margin, size, size);
+        ctx.restore();
+      }
+
+      function drawGrid(ctx, margin, size, order) {
+        const n = Math.pow(2, order);
+        const cell = size / n;
+        ctx.save();
+        ctx.strokeStyle = "#888";
+        ctx.lineWidth = 0.5;
+        for (let i = 1; i < n; i++) {
+          // Vertical lines
+          ctx.beginPath();
+          ctx.moveTo(margin + i * cell, margin);
+          ctx.lineTo(margin + i * cell, margin + size);
+          ctx.stroke();
+          ctx.beginPath();
+          ctx.moveTo(margin, margin + i * cell);
+          ctx.lineTo(margin + size, margin + i * cell);
+          ctx.stroke();
+        }
+        ctx.restore();
+      }
+
+      let animationTimeouts = [];
+
+      function clearAnimation() {
+        for (const id of animationTimeouts) {
+          clearTimeout(id);
+        }
+        animationTimeouts = [];
+      }
+
+      function animateCurve(
+        ctx,
+        points,
+        duration = 1000,
+        margin = 20,
+        curveSize = 100,
+        order = 1
+      ) {
+        ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+        drawGrid(ctx, margin, curveSize, order);
+        drawBox(ctx, margin, curveSize);
+
+        const start = points[0];
+        const end = points[points.length - 1];
+        const gradient = ctx.createLinearGradient(
+          start[0],
+          start[1],
+          end[0],
+          end[1]
+        );
+        gradient.addColorStop(0, "#7DFFFF");
+        gradient.addColorStop(0.5, "#7DDAFF");
+        gradient.addColorStop(1, "#FF425F");
+
+        ctx.strokeStyle = gradient;
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.moveTo(points[0][0], points[0][1]);
+        let i = 1;
+        let total = points.length;
+        let interval = duration / total;
+        function drawStep() {
+          if (i < total) {
+            ctx.lineTo(points[i][0], points[i][1]);
+            ctx.stroke();
+            i++;
+            const timeoutId = setTimeout(drawStep, interval);
+            animationTimeouts.push(timeoutId);
+          }
+        }
+        drawStep();
+      }
+
+      document.getElementById("order").addEventListener("change", function () {
+        clearAnimation();
+        const order = parseInt(document.getElementById("order").value, 10);
+        const canvas = document.getElementById("hilbert");
+        const size = Math.min(
+          600,
+          window.innerWidth - 40,
+          window.innerHeight - 100
+        );
+        resizeCanvas(canvas, size);
+        const ctx = canvas.getContext("2d");
+        const margin = 20;
+        const curveSize = size - 2 * margin;
+        const points = hilbertCurve(order, curveSize).map(([x, y]) => [
+          x + margin,
+          y + margin,
+        ]);
+        ctx.lineWidth = 2;
+        ctx.strokeStyle = "#0074D9";
+        animateCurve(ctx, points, 1200, margin, curveSize, order);
+      });
+    </script>
+  </body>
+</html>
