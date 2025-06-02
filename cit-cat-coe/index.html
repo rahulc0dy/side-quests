@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Cit Cat Coe</title>
+
+    <style>
+      :root {
+        --circle-color: rgb(255, 104, 167);
+        --cross-color: rgb(112, 255, 236);
+        --hash-color: rgba(183, 238, 255, 0.445);
+        --background-color: rgb(21, 3, 31);
+
+        --hash-width: 4px;
+        --sprite-size: var(--sprite-size, 100px);
+      }
+
+      *,
+      *::before,
+      *::after {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+
+      body {
+        display: grid;
+        place-content: center;
+        min-height: 100dvh;
+
+        background-color: var(--background-color);
+      }
+
+      .container {
+        width: max-content;
+        aspect-ratio: 1;
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        grid-template-rows: repeat(3, 1fr);
+        place-content: center;
+      }
+
+      .cell {
+        min-width: calc(var(--sprite-size, 100px) + 20px);
+        height: 100%;
+        place-content: center;
+      }
+
+      .r {
+        border-right: var(--hash-width) solid var(--hash-color, black);
+      }
+
+      .b {
+        border-bottom: var(--hash-width) solid var(--hash-color, black);
+      }
+
+      .circle {
+        width: var(--sprite-size, 100px);
+        aspect-ratio: 1;
+        background-color: transparent;
+        border-radius: 100%;
+        box-shadow: 0 0 0 1rem var(--circle-color, rgb(255, 84, 127)) inset;
+        margin-inline: auto;
+      }
+
+      .cross {
+        width: 120px;
+        height: 20px;
+        background: var(--cross-color, rgb(120, 255, 233));
+        rotate: 45deg;
+
+        &::before {
+          content: "";
+          width: 120px;
+          height: 20px;
+          background: var(--cross-color, rgb(120, 255, 233));
+          display: block;
+          rotate: 90deg;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <div class="cell r b" id="1"></div>
+      <div class="cell r b" id="2"></div>
+      <div class="cell b" id="3"></div>
+      <div class="cell r b" id="4"></div>
+      <div class="cell r b" id="5"></div>
+      <div class="cell b" id="6"></div>
+      <div class="cell r" id="7"></div>
+      <div class="cell r" id="8"></div>
+      <div class="cell" id="9"></div>
+    </div>
+  </body>
+  <script>
+    const CIRCLE = `<div class="circle"></div>`;
+    const CROSS = `<div class="cross"></div>`;
+    let isTurnOfCircle = true;
+
+    let oQueue = [];
+    let xQueue = [];
+
+    const checkWin = () => {
+      const wins = [
+        ["1", "2", "3"],
+        ["4", "5", "6"],
+        ["7", "8", "9"],
+        ["1", "4", "7"],
+        ["2", "5", "8"],
+        ["3", "6", "9"],
+        ["1", "5", "9"],
+        ["3", "5", "7"],
+      ];
+      for (const combo of wins) {
+        const cells = combo.map((id) => document.getElementById(id));
+
+        if (cells.some((cell) => cell.innerHTML.trim() === "")) continue;
+
+        const firstMarker = cells[0].querySelector(".circle")
+          ? "circle"
+          : cells[0].querySelector(".cross")
+          ? "cross"
+          : null;
+        if (!firstMarker) continue;
+
+        const allSame = cells.every((cell) =>
+          cell.querySelector(`.${firstMarker}`)
+        );
+        if (allSame) {
+          alert(
+            `${
+              firstMarker.charAt(0).toUpperCase() + firstMarker.slice(1)
+            } wins!`
+          );
+
+          window.location.reload();
+          return;
+        }
+      }
+    };
+
+    document.querySelectorAll(".cell").forEach((cell) => {
+      cell.addEventListener("click", () => {
+        if (cell.innerHTML.trim() !== "") return;
+
+        let move, moveQueue;
+
+        if (isTurnOfCircle) {
+          move = CIRCLE;
+          moveQueue = oQueue;
+        } else {
+          move = CROSS;
+          moveQueue = xQueue;
+        }
+
+        if (moveQueue.length >= 3) {
+          const oldestChild = moveQueue.shift();
+          const oldestCell = document.getElementById(oldestChild);
+
+          if (oldestCell) oldestCell.innerHTML = "";
+        }
+
+        cell.innerHTML = move;
+        moveQueue.push(cell.id);
+
+        checkWin();
+
+        isTurnOfCircle = !isTurnOfCircle;
+      });
+    });
+  </script>
+</html>
