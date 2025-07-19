@@ -1,7 +1,7 @@
 #pragma once
 
 // Default vertex shader
-inline const char* DEFAULT_VERTEX_SHADER = R"(#version 330 core
+inline const char* DEFAULT_VERTEX_SHADER = R"(#version 460 core
 layout(location = 0) in vec2 aPos;
 void main() {
     gl_Position = vec4(aPos, 0.0, 1.0);
@@ -9,7 +9,7 @@ void main() {
 )";
 
 // Default fragment shader
-inline const char* DEFAULT_FRAGMENT_SHADER = R"(#version 330 core
+inline const char* DEFAULT_FRAGMENT_SHADER = R"(#version 460 core
 uniform float iTime;
 uniform vec2 iResolution;
 uniform vec4 iMouse;

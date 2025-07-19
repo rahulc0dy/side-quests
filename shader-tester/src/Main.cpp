@@ -19,9 +19,10 @@ void framebuffer_size_callback(GLFWwindow* window, int width, int height) {
 
 int main() {
     if (!glfwInit()) { std::cerr << "GLFW init failed\n"; return -1; }
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 6);
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+    glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
 
     GLFWwindow* window = glfwCreateWindow(1280, 720, "C++ Shader Tester", nullptr, nullptr);
     if (!window) { std::cerr << "Window failed\n"; glfwTerminate(); return -1; }
@@ -33,12 +34,20 @@ int main() {
     }
     glViewport(0, 0, 1280, 720);
 
+    int numExtensions = 0;
+    glGetIntegerv(GL_NUM_EXTENSIONS, &numExtensions);
+    std::vector<const char*> extensions;
+    for (int i = 0; i < numExtensions; ++i) {
+        const char* ext = (const char*)glGetStringi(GL_EXTENSIONS, i);
+        extensions.push_back(ext);
+    }
+
     IMGUI_CHECKVERSION();
     ImGui::CreateContext();
     const ImGuiIO& io = ImGui::GetIO(); (void)io;
     ImGui::StyleColorsDark();
     ImGui_ImplGlfw_InitForOpenGL(window, true);
-    ImGui_ImplOpenGL3_Init("#version 330 core");
+    ImGui_ImplOpenGL3_Init("#version 460 core");
 
     constexpr float quadVerts[] = { -1,-1, 1,-1, -1,1, 1,1 };
     GLuint vao, vbo;
@@ -55,7 +64,7 @@ int main() {
     std::string errorLog;
     bool shaderLoaded = shaderMgr.loadShadersFromStrings(DEFAULT_VERTEX_SHADER, DEFAULT_FRAGMENT_SHADER, errorLog);
     bool useEmbeddedDefault = true;
-    bool fragmentOnly = false;
+    bool fragmentOnly = true;
 
     const double startTime = glfwGetTime();
     ImVec2 mousePos(0,0);
@@ -111,6 +120,14 @@ int main() {
             ImGui::Text("Using built-in default shaders.");
         }
 
+        if (ImGui::CollapsingHeader("OpenGL Extensions")) {
+            ImGui::BeginChild("ExtensionsList", ImVec2(350, 200), true, ImGuiWindowFlags_HorizontalScrollbar);
+            for (const auto& ext : extensions) {
+                ImGui::TextUnformatted(ext);
+            }
+            ImGui::EndChild();
+        }
+
         if (ImGui::Button("Load/Reload Shaders")) {
             if (useEmbeddedDefault) {
                 shaderLoaded = shaderMgr.loadShadersFromStrings(DEFAULT_VERTEX_SHADER, DEFAULT_FRAGMENT_SHADER, errorLog);
@@ -122,6 +139,24 @@ int main() {
         if (!shaderLoaded && !errorLog.empty()) {
             ImGui::TextColored(ImVec4(1,0.2f,0.2f,1), "Shader Error:\n%s", errorLog.c_str());
             std::cerr << errorLog << std::endl;
+        }
+
+        if (ImGui::CollapsingHeader("How to use ShaderToy shaders in this app")) {
+            ImGui::Text(
+                "To use a ShaderToy shader in this program:\n"
+                "1. Copy only the fragment shader code (the code in ShaderToy's editor).\n"
+                "2. Make sure it uses a function called 'mainImage(out vec4 fragColor, in vec2 fragCoord)'.\n"
+                "3. Add these lines at the top if missing:\n"
+                "    uniform float iTime;\n"
+                "    uniform vec2 iResolution;\n"
+                "    uniform vec4 iMouse;\n"
+                "    out vec4 FragColor;\n"
+                "4. Add this at the bottom if missing:\n"
+                "    void main() { \n"
+                "        mainImage(FragColor, gl_FragCoord.xy); \n"
+                "    }\n"
+                "If you see errors about missing uniforms or functions, check these steps."
+            );
         }
         ImGui::End();
 

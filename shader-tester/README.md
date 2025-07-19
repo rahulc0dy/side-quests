@@ -1,9 +1,13 @@
-#Shader Tester
+# Shader Tester
 
 This side quest was inspired by shadertoys
 
 the name is as it suggests.
 
+```text
+OpenGL 4.6
+```
 
 > [!WARNING]
-> Currently does not support opengl extensions. I am working on it
+> Shadertoy Ichannels are not supported.
+> I am working on it.

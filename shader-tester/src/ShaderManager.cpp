@@ -6,7 +6,7 @@ ShaderManager::~ShaderManager() { cleanup(); }
 std::string ShaderManager::openFileDialog(const char* filter) {
     const char* filterPatterns[] = { "*.vert", "*.frag", "*.glsl" };
     const char* path = tinyfd_openFileDialog(
-        "Select Shader", "", 2, filterPatterns, "Shader Files", 0);
+        "Select Shader", "", 3, filterPatterns, "Shader Files", 0);
     return path ? std::string(path) : std::string();
 }
 

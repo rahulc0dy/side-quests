@@ -16,7 +16,6 @@ file(GLOB_RECURSE SOURCE_FILES CONFIGURE_DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/src
 
 add_executable(${CMAKE_PROJECT_NAME}
         ${SOURCE_FILES}
-        external/glad/glad.c
 )
 
 add_subdirectory(external/glfw)
