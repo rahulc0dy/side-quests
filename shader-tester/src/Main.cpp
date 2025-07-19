@@ -55,6 +55,7 @@ int main() {
     std::string errorLog;
     bool shaderLoaded = shaderMgr.loadShadersFromStrings(DEFAULT_VERTEX_SHADER, DEFAULT_FRAGMENT_SHADER, errorLog);
     bool useEmbeddedDefault = true;
+    bool fragmentOnly = false;
 
     const double startTime = glfwGetTime();
     ImVec2 mousePos(0,0);
@@ -72,22 +73,39 @@ int main() {
         if (ImGui::Checkbox("Use Default Shaders", &useEmbeddedDefault)) {
             if (useEmbeddedDefault) {
                 shaderLoaded = shaderMgr.loadShadersFromStrings(DEFAULT_VERTEX_SHADER, DEFAULT_FRAGMENT_SHADER, errorLog);
+            } else if (fragmentOnly) {
+                if (!fragPath.empty()) {
+                    shaderLoaded = shaderMgr.loadShadersFromStrings(DEFAULT_VERTEX_SHADER, shaderMgr.readFile(fragPath), errorLog);
+                }
             } else if (!vertPath.empty() && !fragPath.empty()) {
                 shaderLoaded = shaderMgr.loadShaders(vertPath, fragPath, errorLog);
             }
         }
 
         if (!useEmbeddedDefault) {
-            ImGui::Text("Vertex Shader: %s", vertPath.empty() ? "(none selected)" : vertPath.c_str());
-            ImGui::SameLine();
-            if (ImGui::Button("Select Vertex Shader")) {
-                vertPath = shaderMgr.openFileDialog();
+            ImGui::Checkbox("Fragment Shader Only", &fragmentOnly);
+            if (!fragmentOnly) {
+                ImGui::Text("Vertex Shader: %s", vertPath.empty() ? "(none selected)" : vertPath.c_str());
+                ImGui::SameLine();
+                if (ImGui::Button("Select Vertex Shader")) {
+                    std::string selected = shaderMgr.openFileDialog();
+                    if (!selected.empty()) vertPath = selected;
+                }
             }
-
             ImGui::Text("Fragment Shader: %s", fragPath.empty() ? "(none selected)" : fragPath.c_str());
             ImGui::SameLine();
             if (ImGui::Button("Select Fragment Shader")) {
-                fragPath = shaderMgr.openFileDialog();
+                std::string selected = shaderMgr.openFileDialog();
+                if (!selected.empty()) {
+                    fragPath = selected;
+                    if (!useEmbeddedDefault && fragmentOnly) {
+                        shaderLoaded = shaderMgr.loadShadersFromStrings(
+                            DEFAULT_VERTEX_SHADER,
+                            shaderMgr.readFile(fragPath),
+                            errorLog
+                        );
+                    }
+                }
             }
         } else {
             ImGui::Text("Using built-in default shaders.");
@@ -103,6 +121,7 @@ int main() {
 
         if (!shaderLoaded && !errorLog.empty()) {
             ImGui::TextColored(ImVec4(1,0.2f,0.2f,1), "Shader Error:\n%s", errorLog.c_str());
+            std::cerr << errorLog << std::endl;
         }
         ImGui::End();
 

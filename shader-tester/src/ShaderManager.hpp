@@ -14,6 +14,7 @@ public:
     bool loadShaders(const std::string& vertexPath, const std::string& fragmentPath, std::string& errorLog);
     bool loadShadersFromStrings(const std::string& vertSrc, const std::string& fragSrc, std::string& errorLog);
     std::string openFileDialog(const char* filter = "*.vert;*.frag");
+    std::string readFile(const std::string& filePath);
     void use();
     [[nodiscard]] GLuint program() const;
 

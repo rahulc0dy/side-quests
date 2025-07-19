@@ -65,6 +65,13 @@ bool ShaderManager::loadShaders(const std::string& vertexPath, const std::string
     return true;
 }
 
+std::string ShaderManager::readFile(const std::string& path) {
+    std::ifstream file(path);
+    std::stringstream ss;
+    ss << file.rdbuf();
+    return ss.str();
+}
+
 bool ShaderManager::loadShadersFromStrings(const std::string &vertSrc, const std::string &fragSrc, std::string &errorLog) {
     cleanup();
     m_vertexShader = compileShader(GL_VERTEX_SHADER, vertSrc, errorLog);
